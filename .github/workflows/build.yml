@@ -32,8 +32,12 @@ jobs:
           echo "SonarQube Output:" >> sonarcloud-output.txt
           echo "${{ steps.sonarcloud.outputs }}" >> sonarcloud-output.txt
 
+      - name: Set Artifact Name
+        id: artifact_name
+        run: echo "name=sonarcloud-output-$(date +%Y-%m-%d)" >> $GITHUB_ENV
+
       - name: Upload SonarQube Output as Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          name: sonarcloud-output-$(date +%Y-%m-%d)
+          name: ${{ env.name }}
           path: sonarcloud-output.txt
