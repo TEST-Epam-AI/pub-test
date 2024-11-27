@@ -17,20 +17,20 @@ jobs:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Run SonarQube Cloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        id: sonarcloud
-        continue-on-error: true  # Allows the workflow to capture logs even if the action fails
+        run: |
+          echo "Running SonarQube Cloud Scan..."
+          sonar-scanner \
+            -Dsonar.organization=my-organization \
+            -Dsonar.projectKey=my-project-key \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            2>&1 | tee sonarcloud-output.txt
 
       - name: Capture SonarQube Logs with Metadata
         run: |
           echo "Capturing SonarQube Cloud Scan logs with metadata..."
-          echo "Date: $(date)" > sonarcloud-output.txt
-          echo "Commit ID: ${{ github.sha }}" >> sonarcloud-output.txt
-          echo "SonarQube Output:" >> sonarcloud-output.txt
-          echo "${{ steps.sonarcloud.outputs }}" >> sonarcloud-output.txt
+          sed -i '1i Date: $(date)' sonarcloud-output.txt
+          sed -i '2i Commit ID: ${{ github.sha }}' sonarcloud-output.txt
 
       - name: Set Artifact Name
         id: artifact_name
