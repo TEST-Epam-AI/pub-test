@@ -15,29 +15,32 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-
+          
+      - name: Enable Debug Logging
+        run: echo "ACTIONS_STEP_DEBUG=true" >> $GITHUB_ENV
+        
       - name: Run SonarQube Cloud Scan
-        run: |
-          echo "Running SonarQube Cloud Scan..."
-          sonar-scanner \
-            -Dsonar.organization=my-organization \
-            -Dsonar.projectKey=my-project-key \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            2>&1 | tee sonarcloud-output.txt
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        id: sonarcloud
+        continue-on-error: true  # Allows the workflow to capture logs even if the action fails
 
-      - name: Capture SonarQube Logs with Metadata
+      - name: Save Debug Logs
         run: |
-          echo "Capturing SonarQube Cloud Scan logs with metadata..."
-          sed -i '1i Date: $(date)' sonarcloud-output.txt
-          sed -i '2i Commit ID: ${{ github.sha }}' sonarcloud-output.txt
+          echo "Saving debug logs..."
+          cp $GITHUB_WORKSPACE/_temp/_runner_file_commands/sonarcloud.log sonarcloud-logs.txt || echo "Log file not found."
+
 
       - name: Set Artifact Name
         id: artifact_name
         run: echo "name=sonarcloud-output-$(date +%Y-%m-%d)" >> $GITHUB_ENV
 
       - name: Upload SonarQube Output as Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.name }}
           path: sonarcloud-output.txt
+###################################
+ 
