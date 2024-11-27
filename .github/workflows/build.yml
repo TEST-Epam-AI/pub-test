@@ -32,13 +32,8 @@ jobs:
           echo "SonarQube Output:" >> sonarcloud-output.txt
           echo "${{ steps.sonarcloud.outputs }}" >> sonarcloud-output.txt
 
-      - name: Commit and Push Output
-        env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
-        run: |
-          echo "Committing and pushing SonarQube output..."
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add sonarcloud-output.txt
-          git commit -m "Add SonarQube Cloud Scan output with metadata"
-          git push
+      - name: Upload SonarQube Output as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: sonarcloud-output-$(date +%Y-%m-%d)
+          path: sonarcloud-output.txt
