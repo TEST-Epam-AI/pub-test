@@ -33,6 +33,8 @@ jobs:
           ls -lrth $GITHUB_WORKSPACE/*/_runner_file_commands/
           ls -lrth $GITHUB_WORKSPACE/_temp/*/
           cp $GITHUB_WORKSPACE/_temp/_runner_file_commands/sonarcloud.log sonarcloud-logs.txt || echo "Log file not found."
+        continue-on-error: true  # Allows the workflow to capture logs even if the action fails
+
 
 
       - name: Set Artifact Name
