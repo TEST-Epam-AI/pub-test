@@ -30,6 +30,8 @@ jobs:
       - name: Save Debug Logs
         run: |
           echo "Saving debug logs..."
+          ls -lrth $GITHUB_WORKSPACE/*/_runner_file_commands/
+          ls -lrth $GITHUB_WORKSPACE/_temp/*/
           cp $GITHUB_WORKSPACE/_temp/_runner_file_commands/sonarcloud.log sonarcloud-logs.txt || echo "Log file not found."
 
 
