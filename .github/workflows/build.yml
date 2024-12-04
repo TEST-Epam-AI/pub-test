@@ -1,49 +1,36 @@
-name: Build
+name: Build and SonarCloud Analysis
 
 on:
   push:
-    branches: ['*']
+    branches:
+      - '*'  # Trigger for all branches
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - '*'  # Trigger for all pull requests targeting any branch
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   sonarcloud:
-    name: SonarQube Cloud
+    name: SonarCloud Analysis
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-          
-      - name: Enable Debug Logging
-        run: echo "ACTIONS_STEP_DEBUG=true" >> $GITHUB_ENV
-        
-      - name: Run SonarQube Cloud Scan
+          fetch-depth: 0  # Fetch the full history for better analysis
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'  # Set Java version based on your project's requirements
+
+      - name: SonarCloud Analysis
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        id: sonarcloud
-        continue-on-error: true  # Allows the workflow to capture logs even if the action fails
-
-      - name: Save Debug Logs
-        run: |
-          echo "Saving debug logs..."
-          ls -lrth $GITHUB_WORKSPACE/*/_runner_file_commands/
-          ls -lrth $GITHUB_WORKSPACE/_temp/*/
-          cp $GITHUB_WORKSPACE/_temp/_runner_file_commands/sonarcloud.log sonarcloud-logs.txt || echo "Log file not found."
-        continue-on-error: true  # Allows the workflow to capture logs even if the action fails
-
-
-
-      - name: Set Artifact Name
-        id: artifact_name
-        run: echo "name=sonarcloud-output-$(date +%Y-%m-%d)" >> $GITHUB_ENV
-
-      - name: Upload SonarQube Output as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.name }}
-          path: sonarcloud-output.txt
-###################################
- 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed for PR data
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # SonarCloud authentication token
