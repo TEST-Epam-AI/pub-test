@@ -1,38 +1,20 @@
-name: Build and SonarCloud Analysis
-
+name: Build
 on:
   push:
     branches:
-      - '*'  # Trigger for all branches
+      - fix*
   pull_request:
-    branches:
-      - '*'  # Trigger for all pull requests targeting any branch
-    types:
-      - opened
-      - synchronize
-      - reopened
-  workflow_dispatch:  # Enable manual trigger from the Actions tab
-
-
+    types: [opened, synchronize, reopened]
 jobs:
   sonarcloud:
-    name: SonarCloud Analysis
+    name: SonarQube Cloud
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch the full history for better analysis
-
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '11'  # Set Java version based on your project's requirements
-
-      - name: SonarCloud Analysis
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: SonarQube Cloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}  # Needed for PR data
-          SONAR_TOKEN: ${{ secrets.PYSONAR }}  # SonarCloud authentication token
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.PYSONAR }}
