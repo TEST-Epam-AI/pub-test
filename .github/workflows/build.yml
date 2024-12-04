@@ -35,4 +35,4 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}  # Needed for PR data
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # SonarCloud authentication token
+          SONAR_TOKEN: ${{ secrets.PYSONAR }}  # SonarCloud authentication token
