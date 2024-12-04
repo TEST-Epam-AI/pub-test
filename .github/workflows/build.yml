@@ -11,6 +11,8 @@ on:
       - opened
       - synchronize
       - reopened
+  workflow_dispatch:  # Enable manual trigger from the Actions tab
+
 
 jobs:
   sonarcloud:
