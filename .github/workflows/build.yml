@@ -22,7 +22,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0  # Shallow clones should be disabled for better analysis relevancy
 
       # Step 2: Set up Python
       - name: Set up Python 3
@@ -36,65 +36,69 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install requests
 
-      # Step 4: Run SonarCloud Analysis
-      - name: SonarQube Cloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.PYSONAR }}
+      # Step 4: Run SonarCloud Scan using Docker
+      - name: Run SonarCloud Scan
+        run: |
+          docker run \
+            --rm \
+            -e SONAR_HOST_URL=https://sonarcloud.io \
+            -e SONAR_TOKEN=${{ secrets.PYSONAR }} \
+            -v "${{ github.workspace }}:/usr/src" \
+            sonarsource/sonar-scanner-cli:latest
 
       # Step 5: Export Issues to CSV
       - name: Export SonarCloud Issues to CSV
         run: |
-          echo "import requests, csv, sys
+          cat << EOF > export_sonarcloud_issues.py
+          import requests
+          import csv
 
-token = '${{ secrets.PYSONAR }}'
-headers = {'Authorization': f'Bearer {token}'}
+          token = '${{ secrets.PYSONAR }}'
+          headers = {'Authorization': f'Bearer {token}'}
 
-# API parameters
-params = {
-    'componentKeys': 'TEST-Epam-AI_pub-python',
-    'branch': 'python',
-    'ps': 500,
-    'p': 1
-}
+          params = {
+              'componentKeys': 'TEST-Epam-AI_pub-python',
+              'branch': 'python',
+              'ps': 500,
+              'p': 1
+          }
 
-issues_url = 'https://sonarcloud.io/api/issues/search'
+          issues_url = 'https://sonarcloud.io/api/issues/search'
 
-all_issues = []
-while True:
-    response = requests.get(issues_url, headers=headers, params=params)
-    response.raise_for_status()
-    data = response.json()
-    all_issues.extend(data.get('issues', []))
-    if params['p'] * params['ps'] >= data.get('total', 0):
-        break
-    params['p'] += 1
+          all_issues = []
+          while True:
+              response = requests.get(issues_url, headers=headers, params=params)
+              response.raise_for_status()
+              data = response.json()
+              all_issues.extend(data.get('issues', []))
+              if params['p'] * params['ps'] >= data.get('total', 0):
+                  break
+              params['p'] += 1
 
-with open('sonarcloud_issues.csv', 'w', newline='', encoding='utf-8') as file:
-    writer = csv.writer(file)
-    writer.writerow([
-        'Key', 'Rule', 'Severity', 'Type', 'Message', 'Line',
-        'Component', 'Effort', 'Debt', 'Status', 'Resolution',
-        'Creation Date', 'Update Date'
-    ])
-    for issue in all_issues:
-        writer.writerow([
-            issue.get('key', 'N/A'),
-            issue.get('rule', 'N/A'),
-            issue.get('severity', 'N/A'),
-            issue.get('type', 'N/A'),
-            issue.get('message', 'N/A'),
-            issue.get('line', 'N/A'),
-            issue.get('component', 'N/A'),
-            issue.get('effort', 'N/A'),
-            issue.get('debt', 'N/A'),
-            issue.get('status', 'N/A'),
-            issue.get('resolution', 'N/A'),
-            issue.get('creationDate', 'N/A'),
-            issue.get('updateDate', 'N/A'),
-        ])
-" > export_sonarcloud_issues.py
+          with open('sonarcloud_issues.csv', 'w', newline='', encoding='utf-8') as file:
+              writer = csv.writer(file)
+              writer.writerow([
+                  'Key', 'Rule', 'Severity', 'Type', 'Message', 'Line',
+                  'Component', 'Effort', 'Debt', 'Status', 'Resolution',
+                  'Creation Date', 'Update Date'
+              ])
+              for issue in all_issues:
+                  writer.writerow([
+                      issue.get('key', 'N/A'),
+                      issue.get('rule', 'N/A'),
+                      issue.get('severity', 'N/A'),
+                      issue.get('type', 'N/A'),
+                      issue.get('message', 'N/A'),
+                      issue.get('line', 'N/A'),
+                      issue.get('component', 'N/A'),
+                      issue.get('effort', 'N/A'),
+                      issue.get('debt', 'N/A'),
+                      issue.get('status', 'N/A'),
+                      issue.get('resolution', 'N/A'),
+                      issue.get('creationDate', 'N/A'),
+                      issue.get('updateDate', 'N/A'),
+                  ])
+          EOF
           python3 export_sonarcloud_issues.py
 
       # Step 6: Upload CSV as Artifact
