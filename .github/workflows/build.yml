@@ -47,6 +47,7 @@ jobs:
             sonarsource/sonar-scanner-cli:latest \
             -Dsonar.projectKey=TEST-Epam-AI_pub-python \
             -Dsonar.organization=test-epam-ai \
+            -Dsonar.branch.name=${{ github.ref_name }} \
             -Dsonar.java.binaries=target/classes  # Specify compiled classes directory for Maven
 
       # Step 5: Export Issues to CSV
@@ -55,13 +56,15 @@ jobs:
           cat << EOF > export_sonarcloud_issues.py
           import requests
           import csv
+          import os
 
           token = '${{ secrets.PYSONAR }}'
+          branch = os.getenv('GITHUB_REF_NAME')
           headers = {'Authorization': f'Bearer {token}'}
 
           params = {
               'componentKeys': 'TEST-Epam-AI_pub-python',
-              'branch': 'python',
+              'branch': branch,
               'ps': 500,
               'p': 1
           }
