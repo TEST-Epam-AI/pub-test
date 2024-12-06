@@ -51,7 +51,9 @@ def login():
 def dashboard(username):
     """User dashboard with potential XSS vulnerability."""
     # Insecure use of user input in response
-    return f"<h1>Welcome, {username}!</h1>"
+    # Sanitize user input to prevent XSS
+safe_username = username.replace("<", "&lt;").replace(">", "&gt;")
+return f"<h1>Welcome, {safe_username}!</h1>"
 
 
 @app.route("/register", methods=["GET", "POST"])
