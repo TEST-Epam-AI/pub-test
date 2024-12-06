@@ -3,10 +3,10 @@ name: Build and SonarCloud Analysis
 on:
   push:
     branches:
-      - '*'  # Trigger for all branches
+      - '**'  # Trigger for all branches
   pull_request:
     branches:
-      - '*'  # Trigger for all pull requests targeting any branch
+      - '**'  # Trigger for all pull requests targeting any branch
     types:
       - opened
       - synchronize
