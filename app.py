@@ -4,8 +4,8 @@ import os
 
 app = Flask(__name__)
 
-# Hardcoded secret key (security vulnerability)
-app.secret_key = "hardcoded_secret_key"
+# Secure secret key using environment variable
+app.secret_key = os.environ.get('SECRET_KEY', 'default_secret_key')
 
 # Insecure storage of user credentials
 users = [
