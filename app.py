@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 # Hardcoded secret key (security vulnerability)
-app.secret_key = "hardcoded_secret_key"
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
 
 # Insecure storage of user credentials
 users = [
@@ -51,7 +51,7 @@ def login():
 def dashboard(username):
     """User dashboard with potential XSS vulnerability."""
     # Insecure use of user input in response
-    return f"<h1>Welcome, {username}!</h1>"
+    return render_template("dashboard.html", username=username)
 
 
 @app.route("/register", methods=["GET", "POST"])
